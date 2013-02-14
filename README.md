@@ -7,9 +7,9 @@ This is a modification of [ronnywang](https://github.com/ronnywang/PHPMemcacheSA
 On AppFog, the connection information for your Memcachier instance is exposed through three environment variables: 
 
 ```php
-echo $_ENV['MEMCACHIER_SERVERS']  // output: xxx.ec2.memcachier.com:11211
-echo $_ENV['MEMCACHIER_USERNAME'] // output: aa92mro2in
-echo $_ENV['MEMCACHIER_PASSWORD'] // output: oim23in924b2NS3Iaid1x193jhe1
+echo $_ENV['MEMCACHIER_SERVERS'];  // output: xxx.ec2.memcachier.com:11211
+echo $_ENV['MEMCACHIER_USERNAME']; // output: aa92mro2in
+echo $_ENV['MEMCACHIER_PASSWORD']; // output: oim23in924b2NS3Iaid1x193jhe1
 ```
 
 The format of ``$_ENV['MEMCACHIER_SERVERS']`` is ``$HOST:$PORT`` on AppFog's PHP instances. In the [AppFog Memcachier PHP docs](http://docs.appfog.com/add-ons/memcachier#php), the example code suggests that you add a server using the syntax:  
@@ -72,20 +72,26 @@ Here is a production example using Memcachier to cache results from queries to a
 include('MemcacheSASL.php');
 
 function memcacheQuery($query, $hours = 1) {
+	// Set up Memcachier connection
 	$m = new MemcacheSASL;
 	$m->addServer(getenv('MEMCACHIER_SERVERS'));
 	$m->setSaslAuthData(getenv('MEMCACHIER_USERNAME'), getenv('MEMCACHIER_PASSWORD'));
 	
+	// Set key and check for existing entry
 	$key = md5($query);
-	$songs_array = $m->get($key);
-	if( !$songs_array ) {
-		$raw_query = mysql_query($query);
-		while( $songs = mysql_fetch_array($raw_query) ) {
-			$songs_array[] = $songs;
+	$results = $m->get($key);
+
+	// If there is no entry, make a database query
+	if (!$results) {
+		$request = mysql_query($query);
+		while ($item = mysql_fetch_array($request)) {
+			$results[] = $item;
 		}
-		$cache_entry = $m->add($key, $songs_array, 60*60*$hours);
+		$cache_entry = $m->add($key, $results, 60*60*$hours);
 	}
-	return count($songs_array[0]) == 1 ? $songs_array[0] : $songs_array;
+
+	// Return array of results, or a single result.
+	return (count($results) > 1) ? $songs_array : $songs_array[0];
 }
 ```
 
