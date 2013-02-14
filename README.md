@@ -41,6 +41,7 @@ Now you are ready to integrate Memcachier with your code. To get started, downlo
 
 ```php
 include('MemcacheSASL.php');
+
 $m = new MemcacheSASL;
 $m->addServer(getenv('MEMCACHIER_SERVERS'));
 $m->setSaslAuthData(getenv('MEMCACHIER_USERNAME'), getenv('MEMCACHIER_PASSWORD'));
@@ -56,7 +57,7 @@ $m->delete('test');
 
 This code will add a cache entry with the key 'test' and a value '123'. It will then immediately retrieve and print the value of the key 'test' (which is '123') from the cache. Finally, it will delete this cache entry.
 
-$m->add() can also accept a third argument, $expiration, which will set the cache expiration of your key to $expiration seconds from now. To set the same key/value as above with a one hour expiration, I would write:
+``$m->add()`` can also accept a third argument, ``$expiration``, which is the lifespan of the cache entry in seconds. To set the same key/value as above with a one hour expiration, I would write:
 
 ```php
 $m->add('test', '123', 3600); // set expiration of 1hr (60s * 60m)
@@ -90,7 +91,7 @@ function memcacheQuery($query, $hours = 1) {
 		$cache_entry = $m->add($key, $results, 60*60*$hours);
 	}
 
-	// Return array of results, or a single result.
+	// Return array of results, or a single result
 	return (count($results) > 1) ? $songs_array : $songs_array[0];
 }
 ```
