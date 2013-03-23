@@ -118,9 +118,9 @@ class MemcacheSASL
         }
     }
 
-    public function addServer($server, $weight = 0)
+    public function addServer($host, $port, $weight = 0)
     {
-        $this->_fp = stream_socket_client($server);
+        $this->_fp = stream_socket_client($host . ':' . $port);
     }
 
     public function get($key)
@@ -345,16 +345,54 @@ class MemcacheSASL
         return $ret;
     }
 
-    public function append()
+    public function append($key, $value)
     {
+        // TODO: If the Memcached::OPT_COMPRESSION is enabled, the operation
+        // should failed.
+        $sent = $this->_send(array(
+                    'opcode' => 0x0e,
+                    'key' => $key,
+                    'value' => $value,
+                    ));
+        $data = $this->_recv();
+        if ($data['status'] == 0) {
+            return TRUE;
+        }
+
+        return FALSE;
     }
 
-    public function prepend()
+    public function prepend($key, $value)
     {
+        // TODO: If the Memcached::OPT_COMPRESSION is enabled, the operation
+        // should failed.
+        $sent = $this->_send(array(
+                    'opcode' => 0x0f,
+                    'key' => $key,
+                    'value' => $value,
+                    ));
+        $data = $this->_recv();
+        if ($data['status'] == 0) {
+            return TRUE;
+        }
+
+        return FALSE;
     }
 
-    public function getMulti()
+    public function getMulti(array $keys)
     {
+        // TODO: from http://code.google.com/p/memcached/wiki/BinaryProtocolRevamped#Get,_Get_Quietly,_Get_Key,_Get_Key_Quietly
+        //       Clients should implement multi-get (still important for reducing network roundtrips!) as n pipelined requests ...
+        $list = array();
+
+        foreach ($keys as $key) {
+            $value = $this->get($key);
+            if (false !== $value) {
+                $list[$key] = $value;
+            }
+        }
+
+        return $list;
     }
 
 
@@ -363,5 +401,40 @@ class MemcacheSASL
     public function setOption($key, $value)
     {
 	$this->_options[$key] = $value;
+    }
+
+    /**
+     * Set the memcache object to be a session handler
+     *
+     * Ex:
+     * $m = new MemcacheSASL;
+     * $m->addServer('xxx', 11211);
+     * $m->setSaslAuthData('user', 'password');
+     * $m->setSaveHandler();
+     * session_start();
+     * $_SESSION['hello'] = 'world';
+     *
+     * @access public
+     * @return void
+     */
+    public function setSaveHandler()
+    {
+        session_set_save_handler(
+            function($savePath, $sessionName){ // open
+            },
+            function(){ // close
+            },
+            function($sessionId){ // read
+                return $this->get($sessionId);
+            },
+            function($sessionId, $data){ // write
+                return $this->set($sessionId, $data);
+            },
+            function($sessionId){ // destroy
+                $this->delete($sessionId);
+            },
+            function($lifetime) { // gc
+            }
+        );
     }
 }
