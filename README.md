@@ -1,6 +1,6 @@
 ## PHPMemcacheSASL for AppFog
 
-This is a modification of [ronnywang](https://github.com/ronnywang/PHPMemcacheSASL)'s implementation of PHPMemcacheSASL specifically for use on [AppFog](http://appfog.com). As of now, this is the official reference implementation [listed in the documentation](https://docs.appfog.com/add-ons/memcachier#php).
+This is a modification of [ronnywang](https://github.com/ronnywang/PHPMemcacheSASL)'s implementation of PHPMemcacheSASL specifically for use on [AppFog](http://appfog.com). As of now, this is the official reference implementation [listed in the documentation](https://docs.appfog.com/add-ons/memcachier#php). Awesome contributers include [robertocr](https://github.com/robertocr) -- if you make a useful pull request, I will give you commit access.
 
 ### What's the difference?
 
